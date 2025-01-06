@@ -1,0 +1,99 @@
+package req
+
+type AddChainReq struct {
+	Port       int32  `json:"Port,required"`
+	Name       string `json:"Name,required"`
+	PreferIpv6 bool   `json:"PreferIpv6"`
+
+	ChainType string `json:"ChainType" vd:"$=='TLS'||$=='TCP'||$==''"`
+	NodeId    int64  `json:"NodeId,required"`
+}
+
+type DelChainReq struct {
+	ID int64 `json:"ID,required"`
+
+	Port int32
+}
+type AddRuleReq struct {
+	ListenPort int32  `json:"ListenPort,required"`
+	RemoteAddr string `json:"RemoteAddr,required"`
+	ChainAddr  string `json:"ChainAddr"`
+	RuleName   string `json:"RuleName,Required"`
+
+	ChainType string `json:"ChainType" vd:"$=='TLS'||$=='TCP'||$==''"`
+	NodeId    int64  `json:"NodeId, required"`
+	ChainId   int64
+}
+
+type TestRuleReq struct {
+	ID int64 `json:"ID,required"`
+
+	// for agent
+	Destination string
+}
+
+type AddNodeReq struct {
+	NodeName string `json:"NodeName,required"`
+	NodeType string `json:"NodeType,required" vd:"$=='inbound'||$=='outbound'"`
+
+	DefaultIPv6 bool `json:"DefaultIPv6"`
+}
+
+type DelNodeReq struct {
+	ID int64 `json:"ID,required"`
+}
+
+type RegisterNodeReq struct {
+	Port int32  `json:"Port"`
+	IP   string `json:"IP"`
+
+	Ipv4       string `json:"Ipv4"`
+	Ipv6       string `json:"Ipv6"`
+	PreferIpv6 bool   `json:"PreferIpv6"`
+}
+
+type DelRuleReq struct {
+	ID int64 `json:"ID,required"`
+
+	Port int32
+}
+
+type ListRuleReq struct {
+	PageSize int32 `json:"PageSize,omitempty"`
+	PageNo   int32 `json:"PageNo,omitempty"`
+	RuleName string
+	OrderBy  string
+	Asc      bool
+}
+
+type ModifyRuleReq struct {
+	ID int64 `json:"ID,required"`
+
+	RuleName   string `json:"RuleName"`
+	ListenPort int32  `json:"ListenPort"`
+	RemoteAddr string `json:"RemoteAddr"`
+	ChainId    int64  `json:"ChainId"`
+	ChainType  string `json:"ChainType" vd:"$=='TLS'||$=='TCP'||$==''"`
+	// for agent
+	OldListenPort int32  `json:"OldListenPort"`
+	ChainAddr     string `json:"ChainAddr"`
+}
+
+type ListChainReq struct {
+	PageSize  int32  `json:"PageSize,omitempty"`
+	PageNo    int32  `json:"PageNo,omitempty"`
+	ChainName string `json:"ChainName,omitempty"`
+	Protocol  string `json:"Protocol,omitempty"`
+}
+
+type ListNodeReq struct {
+	PageSize int32  `json:"PageSize,omitempty"`
+	PageNo   int32  `json:"PageNo,omitempty"`
+	NodeName string `json:"NodeName,omitempty"`
+	NodeType string `json:"nodeType,omitempty"`
+}
+
+type ReportNetworkTrafficReq struct {
+	Port    int32 `json:"Port,required"`
+	Traffic int64 `json:"Traffic"`
+}
