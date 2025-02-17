@@ -20,6 +20,9 @@ var (
 	Chain                *chain
 	Node                 *node
 	Rule                 *rule
+	TrafficPlan          *trafficPlan
+	User                 *user
+	UserDailyTraffic     *userDailyTraffic
 	UserRoleChainMapping *userRoleChainMapping
 	UserRoleNodeMapping  *userRoleNodeMapping
 )
@@ -29,6 +32,9 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	Chain = &Q.Chain
 	Node = &Q.Node
 	Rule = &Q.Rule
+	TrafficPlan = &Q.TrafficPlan
+	User = &Q.User
+	UserDailyTraffic = &Q.UserDailyTraffic
 	UserRoleChainMapping = &Q.UserRoleChainMapping
 	UserRoleNodeMapping = &Q.UserRoleNodeMapping
 }
@@ -39,6 +45,9 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		Chain:                newChain(db, opts...),
 		Node:                 newNode(db, opts...),
 		Rule:                 newRule(db, opts...),
+		TrafficPlan:          newTrafficPlan(db, opts...),
+		User:                 newUser(db, opts...),
+		UserDailyTraffic:     newUserDailyTraffic(db, opts...),
 		UserRoleChainMapping: newUserRoleChainMapping(db, opts...),
 		UserRoleNodeMapping:  newUserRoleNodeMapping(db, opts...),
 	}
@@ -50,6 +59,9 @@ type Query struct {
 	Chain                chain
 	Node                 node
 	Rule                 rule
+	TrafficPlan          trafficPlan
+	User                 user
+	UserDailyTraffic     userDailyTraffic
 	UserRoleChainMapping userRoleChainMapping
 	UserRoleNodeMapping  userRoleNodeMapping
 }
@@ -62,6 +74,9 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		Chain:                q.Chain.clone(db),
 		Node:                 q.Node.clone(db),
 		Rule:                 q.Rule.clone(db),
+		TrafficPlan:          q.TrafficPlan.clone(db),
+		User:                 q.User.clone(db),
+		UserDailyTraffic:     q.UserDailyTraffic.clone(db),
 		UserRoleChainMapping: q.UserRoleChainMapping.clone(db),
 		UserRoleNodeMapping:  q.UserRoleNodeMapping.clone(db),
 	}
@@ -81,6 +96,9 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		Chain:                q.Chain.replaceDB(db),
 		Node:                 q.Node.replaceDB(db),
 		Rule:                 q.Rule.replaceDB(db),
+		TrafficPlan:          q.TrafficPlan.replaceDB(db),
+		User:                 q.User.replaceDB(db),
+		UserDailyTraffic:     q.UserDailyTraffic.replaceDB(db),
 		UserRoleChainMapping: q.UserRoleChainMapping.replaceDB(db),
 		UserRoleNodeMapping:  q.UserRoleNodeMapping.replaceDB(db),
 	}
@@ -90,6 +108,9 @@ type queryCtx struct {
 	Chain                *chainDo
 	Node                 *nodeDo
 	Rule                 *ruleDo
+	TrafficPlan          *trafficPlanDo
+	User                 *userDo
+	UserDailyTraffic     *userDailyTrafficDo
 	UserRoleChainMapping *userRoleChainMappingDo
 	UserRoleNodeMapping  *userRoleNodeMappingDo
 }
@@ -99,6 +120,9 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 		Chain:                q.Chain.WithContext(ctx),
 		Node:                 q.Node.WithContext(ctx),
 		Rule:                 q.Rule.WithContext(ctx),
+		TrafficPlan:          q.TrafficPlan.WithContext(ctx),
+		User:                 q.User.WithContext(ctx),
+		UserDailyTraffic:     q.UserDailyTraffic.WithContext(ctx),
 		UserRoleChainMapping: q.UserRoleChainMapping.WithContext(ctx),
 		UserRoleNodeMapping:  q.UserRoleNodeMapping.WithContext(ctx),
 	}

@@ -79,9 +79,9 @@ func main() {
 		log.Fatalf("创建代理服务器失败: %v", err)
 	}
 
-	log.Printf("UDP代理服务器已启动\n模式: %s\n监听地址: %s\n", *mode, *localAddr)
+	hlog.Infof("UDP代理服务器已启动\n模式: %s\n监听地址: %s\n", *mode, *localAddr)
 	if *mode == "first" {
-		log.Printf("代理服务器: %s\n", *proxyAddr)
+		hlog.Infof("代理服务器: %s\n", *proxyAddr)
 	}
 
 	if err := server.Start(); err != nil {
@@ -154,12 +154,12 @@ func (s *ProxyServer) Start() error {
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
 				}
-				log.Printf("读取数据失败: %v", err)
+				hlog.Errorf("读取数据失败: %v", err)
 				continue
 			}
 
 			if s.mode == ServerMode && n <= MinHeaderSize {
-				log.Printf("收到的数据包太小，无法解析地址")
+				hlog.Errorf("收到的数据包太小，无法解析地址")
 				continue
 			}
 
@@ -169,7 +169,7 @@ func (s *ProxyServer) Start() error {
 }
 
 // Stop 停止代理服务器
-func (s *ProxyServer) Close() {
+func (s *ProxyServer) Close() error {
 	close(s.shutdownChan)
 	if s.conn != nil {
 		s.conn.Close()
@@ -180,6 +180,7 @@ func (s *ProxyServer) Close() {
 		return true
 	})
 	s.wg.Wait()
+	return nil
 }
 
 // packAddress 将地址打包到数据前面
@@ -256,7 +257,7 @@ func (s *ProxyServer) handleClientPacket(clientAddr *net.UDPAddr, data []byte) {
 	if !loaded {
 		targetConn, err := net.DialUDP("udp", nil, s.proxyAddr)
 		if err != nil {
-			log.Printf("连接代理服务器失败: %v", err)
+			hlog.Errorf("连接代理服务器失败: %v", err)
 			return
 		}
 
@@ -283,7 +284,7 @@ func (s *ProxyServer) handleClientPacket(clientAddr *net.UDPAddr, data []byte) {
 	// 转发数据到代理服务器
 	_, err := client.targetConn.Write(dataProxy)
 	if err != nil {
-		log.Printf("发送数据到代理服务器失败: %v", err)
+		hlog.Errorf("发送数据到代理服务器失败: %v", err)
 		s.closeClient(clientKey, client)
 	}
 }
@@ -293,11 +294,9 @@ func (s *ProxyServer) handleServerPacket(clientAddr *net.UDPAddr, data []byte) {
 	// 解析目标地址
 	targetAddr, actualData, err := s.unpackAddress(data)
 	if err != nil {
-		log.Printf("解析目标地址失败: %v", err)
+		hlog.Errorf("解析目标地址失败: %v", err)
 		return
 	}
-
-	log.Printf("handleServerPacket: 目标地址: %v", targetAddr)
 
 	clientKey := clientAddr.String()
 	clientValue, loaded := s.clients.Load(clientKey)
@@ -306,7 +305,7 @@ func (s *ProxyServer) handleServerPacket(clientAddr *net.UDPAddr, data []byte) {
 	if !loaded {
 		targetConn, err := net.DialUDP("udp", nil, targetAddr)
 		if err != nil {
-			log.Printf("连接目标服务器失败: %v", err)
+			hlog.Errorf("连接目标服务器失败: %v", err)
 			return
 		}
 
@@ -331,7 +330,7 @@ func (s *ProxyServer) handleServerPacket(clientAddr *net.UDPAddr, data []byte) {
 	// 转发数据到目标服务器
 	_, err = client.targetConn.Write(actualData)
 	if err != nil {
-		log.Printf("转发数据到目标服务器失败: %v", err)
+		hlog.Errorf("转发数据到目标服务器失败: %v", err)
 		s.closeClient(clientKey, client)
 	}
 }
@@ -355,7 +354,7 @@ func (s *ProxyServer) handleTargetReturn(clientAddr *net.UDPAddr, client *Client
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
 				}
-				log.Printf("从目标服务器读取数据失败: %v", err)
+				hlog.Errorf("从目标服务器读取数据失败: %v", err)
 				s.closeClient(clientKey, client)
 				return
 			}
@@ -363,7 +362,7 @@ func (s *ProxyServer) handleTargetReturn(clientAddr *net.UDPAddr, client *Client
 			// 发送数据回客户端
 			_, err = s.conn.WriteToUDP(buffer[:n], clientAddr)
 			if err != nil {
-				log.Printf("发送数据回客户端失败: %v", err)
+				hlog.Errorf("发送数据回客户端失败: %v", err)
 				s.closeClient(clientKey, client)
 				return
 			}
@@ -404,7 +403,7 @@ func (s *ProxyServer) cleanupExpiredClients() {
 			for _, key := range expiredKeys {
 				if clientValue, ok := s.clients.Load(key); ok {
 					client := clientValue.(*Client)
-					log.Printf("清理过期连接: %s", key)
+					hlog.Infof("清理过期连接: %s", key)
 					s.closeClient(key, client)
 				}
 			}

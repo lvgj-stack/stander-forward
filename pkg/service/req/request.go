@@ -1,5 +1,9 @@
 package req
 
+import (
+	"time"
+)
+
 type AddChainReq struct {
 	Port       int32  `json:"Port,required"`
 	Name       string `json:"Name,required"`
@@ -33,8 +37,9 @@ type TestRuleReq struct {
 }
 
 type AddNodeReq struct {
-	NodeName string `json:"NodeName,required"`
-	NodeType string `json:"NodeType,required" vd:"$=='inbound'||$=='outbound'"`
+	NodeName string  `json:"NodeName,required"`
+	NodeType string  `json:"NodeType,required" vd:"$=='inbound'||$=='outbound'"`
+	Rate     float32 `json:"Rate"`
 
 	DefaultIPv6 bool `json:"DefaultIPv6"`
 }
@@ -96,4 +101,31 @@ type ListNodeReq struct {
 type ReportNetworkTrafficReq struct {
 	Port    int32 `json:"Port,required"`
 	Traffic int64 `json:"Traffic"`
+}
+
+type GetUserPlanInfoReq struct {
+	UserId int32 `vd:"$!=0"`
+}
+
+type EditChainReq struct {
+	ID        int64  `json:"ID,required"`
+	ChainName string `json:"ChainName"`
+}
+
+type EditNodeReq struct {
+	ID       int64   `json:"ID,omitempty"`
+	NodeName string  `json:"NodeName,omitempty"`
+	Rate     float32 `json:"Rate,omitempty"`
+}
+
+type ListUsersReq struct {
+	PageSize int `default:"10"`
+	PageNo   int `default:"1"`
+	Username string
+	OrderBy  string
+	Asc      bool
+}
+type EditUserReq struct {
+	ID             int32
+	ExpirationTime *time.Time
 }

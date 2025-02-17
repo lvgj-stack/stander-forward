@@ -1,6 +1,8 @@
 package resp
 
 import (
+	"time"
+
 	"github.com/Mr-LvGJ/stander/pkg/model/entity"
 )
 
@@ -85,4 +87,37 @@ type ListNodeResp struct {
 }
 
 type ReportNetworkTrafficResp struct {
+}
+
+type GetUserPlanInfoResp struct {
+	Username       string
+	ExpirationTime time.Time
+	PlanTraffic    int32
+	UsedTraffic    int32
+	PlanName       string
+	DailyTraffics  []DailyTraffic
+}
+
+type DailyTraffic struct {
+	Date    time.Time
+	Traffic int32
+}
+
+type EditChainResp struct {
+}
+type EditNodeResp struct {
+}
+
+type ListUsersResp struct {
+	PageSize   int
+	PageNumber int
+	TotalCount int64
+	Users      []*UserTo
+}
+type UserTo struct {
+	*entity.User
+	UsedTraffic int64
+}
+
+type EmptyResp struct {
 }

@@ -34,7 +34,7 @@ func init() {
 	pflag.StringVarP(&ipv6, "ipv6", "", "", "ipv6")
 	pflag.StringVarP(&listenIp, "listen-ip", "", "", "listen ip")
 	pflag.Int32VarP(&port, "port", "p", 18123, "http port")
-	pflag.IntVarP(&logLevel, "log-level", "", 2, "log level")
+	pflag.IntVarP(&logLevel, "log-level", "", 3, "log level")
 	pflag.BoolVarP(&preferIpv6, "prefer-ipv6", "", false, "prefer ipv6")
 	pflag.BoolVarP(&enableUdp, "enable-udp", "", true, "prefer ipv6")
 	pflag.Parse()

@@ -19,7 +19,7 @@ func main() {
 	model.InitMysql(&config.Database{
 		Username: "stander",
 		Password: "Lgj0873967111...",
-		Addr:     "mysql-4594358b577b-public.rds.volces.com:3306",
+		Addr:     "mysql-5b8c7ef1c075-public.rds.volces.com:3306",
 		DBName:   "stander",
 	})
 	DB = model.GetDb()
@@ -50,9 +50,15 @@ func main() {
 	// if you want to use GenerateModel/GenerateModelAs, UseDB is necessary, or it will panic
 	g.UseDB(DB)
 	node := g.GenerateModel("nodes")
+	trafficPlan := g.GenerateModel("traffic_plan")
+	udt := g.GenerateModel("user_daily_traffic")
 	chain := g.GenerateModel("chains", gen.FieldRelate(field.HasOne, "Node", node,
 		&field.RelateConfig{
 			GORMTag: field.GormTag{"references": []string{"NodeID"}, "foreignKey": []string{"ID"}},
+		}))
+	user := g.GenerateModel("user", gen.FieldRelate(field.HasOne, "TrafficPlan", trafficPlan,
+		&field.RelateConfig{
+			GORMTag: field.GormTag{"references": []string{"PlanID"}, "foreignKey": []string{"ID"}},
 		}))
 	rule := g.GenerateModel("rules",
 		gen.FieldRelate(field.HasOne, "Node", node,
@@ -78,6 +84,9 @@ func main() {
 		rule,
 		urcm,
 		urnm,
+		udt,
+		trafficPlan,
+		user,
 	)
 
 	g.Execute()

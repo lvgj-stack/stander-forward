@@ -26,6 +26,7 @@ type Node struct {
 	NodeType  *string        `gorm:"column:node_type;type:varchar(255)" json:"nodeType"`
 	Ipv4      *string        `gorm:"column:ipv4;type:varchar(255)" json:"ipv4"`
 	Ipv6      *string        `gorm:"column:ipv6;type:varchar(255)" json:"ipv6"`
+	Rate      float32        `gorm:"column:rate;type:float;not null;default:1" json:"rate"`
 }
 
 // TableName Node's table name

@@ -249,7 +249,7 @@ func DelPort(port int32) error {
 	if err != nil {
 		hlog.Errorf("close conn failed, port: %d, err: %v", port, err)
 	}
-	udpK := (&connector.UDPConnector{}).GetStoreConnKey(int(port))
+	udpK := (&udp_chain_connector.ProxyServer{}).GetStoreConnKey(int(port))
 	v, ok = mgr.srcConnMap.Load(udpK)
 	if !ok {
 		hlog.Info("udp port conn not found", ", port: ", port)

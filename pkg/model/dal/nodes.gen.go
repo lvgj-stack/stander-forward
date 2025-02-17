@@ -39,6 +39,7 @@ func newNode(db *gorm.DB, opts ...gen.DOOption) node {
 	_node.NodeType = field.NewString(tableName, "node_type")
 	_node.Ipv4 = field.NewString(tableName, "ipv4")
 	_node.Ipv6 = field.NewString(tableName, "ipv6")
+	_node.Rate = field.NewFloat32(tableName, "rate")
 
 	_node.fillFieldMap()
 
@@ -61,6 +62,7 @@ type node struct {
 	NodeType  field.String
 	Ipv4      field.String
 	Ipv6      field.String
+	Rate      field.Float32
 
 	fieldMap map[string]field.Expr
 }
@@ -89,6 +91,7 @@ func (n *node) updateTableName(table string) *node {
 	n.NodeType = field.NewString(table, "node_type")
 	n.Ipv4 = field.NewString(table, "ipv4")
 	n.Ipv6 = field.NewString(table, "ipv6")
+	n.Rate = field.NewFloat32(table, "rate")
 
 	n.fillFieldMap()
 
@@ -113,7 +116,7 @@ func (n *node) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (n *node) fillFieldMap() {
-	n.fieldMap = make(map[string]field.Expr, 12)
+	n.fieldMap = make(map[string]field.Expr, 13)
 	n.fieldMap["id"] = n.ID
 	n.fieldMap["created_at"] = n.CreatedAt
 	n.fieldMap["updated_at"] = n.UpdatedAt
@@ -126,6 +129,7 @@ func (n *node) fillFieldMap() {
 	n.fieldMap["node_type"] = n.NodeType
 	n.fieldMap["ipv4"] = n.Ipv4
 	n.fieldMap["ipv6"] = n.Ipv6
+	n.fieldMap["rate"] = n.Rate
 }
 
 func (n node) clone(db *gorm.DB) node {

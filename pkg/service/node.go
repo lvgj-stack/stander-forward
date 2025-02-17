@@ -26,6 +26,9 @@ func NodeSrv(c context.Context, ctx *app.RequestContext) {
 	case "AddNode":
 		resp, err := addNode(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
+	case "EditNode":
+		resp, err := editNode(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
 	case "DeleteNode":
 		resp, err := delNode(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
@@ -67,6 +70,7 @@ func addNode(c context.Context, ctx *app.RequestContext) (*resp.AddNodeResp, err
 			NodeName: &r.NodeName,
 			Key:      &uid,
 			NodeType: &r.NodeType,
+			Rate:     r.Rate,
 		}); err != nil {
 			return nil, err
 		}
@@ -230,4 +234,28 @@ func listNode(c context.Context, ctx *app.RequestContext) (*resp.ListNodeResp, e
 	}
 
 	return &resp.ListNodeResp{Nodes: nodes, TotalCount: cnt}, nil
+}
+
+func editNode(c context.Context, ctx *app.RequestContext) (*resp.EditNodeResp, error) {
+	r := req.EditNodeReq{}
+	if err := ctx.BindAndValidate(&r); err != nil {
+		return nil, err
+	}
+	if config.GetRole() == string(common.Agent) {
+		return &resp.EditNodeResp{}, nil
+	}
+
+	updateFields := make(map[string]any)
+	if r.NodeName != "" {
+		updateFields["node_name"] = r.NodeName
+	}
+	if r.Rate >= 0 {
+		updateFields["rate"] = r.Rate
+	}
+
+	_, err := dal.Node.WithContext(c).Where(dal.Node.ID.Eq(r.ID)).Updates(updateFields)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.EditNodeResp{}, nil
 }

@@ -81,30 +81,30 @@ func (t *TCPConnector) Close() error {
 	return t.listener.Close()
 }
 
-func (t *TCPConnector) estabFromHeader(conn net.Conn) (*net.TCPConn, io.Reader, error) {
+func (t *TCPConnector) estabFromHeader(conn net.Conn) (*net.TCPConn, io.Reader, string, error) {
 	reader := bufio.NewReader(conn)
 	firstLine, err := reader.ReadString('\n')
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	hlog.Infof("firstLine: %s", firstLine)
 	if len(firstLine) == 0 {
-		return nil, nil, errors.New("read empty first line")
+		return nil, nil, "", errors.New("read empty first line")
 	}
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", firstLine[:len(firstLine)-1])
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 
 	destConn, err := net.DialTCP("tcp", nil, tcpAddr)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
 	if destConn == nil {
-		return nil, nil, err
+		return nil, nil, "", err
 	}
-	return destConn, reader, nil
+	return destConn, reader, tcpAddr.String(), nil
 }
 
 func (t *TCPConnector) reportCurTraffic() {
@@ -158,25 +158,33 @@ func (t *TCPConnector) handleConn(rawConn net.Conn) error {
 			return err
 		}
 		go func() {
-			errChan <- copyConn(conn, destConn, nil)
+			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
 		}()
 		go func() {
 			errChan <- copyConn(destConn, conn, func(i int64) { t.curTraffic.Add(i) })
 		}()
 	} else if t.Chain == nil && t.RAddr == "" {
-		var reader io.Reader
-		destConn, reader, err = t.estabFromHeader(conn)
+		var (
+			reader io.Reader
+		)
+		destConn, reader, _, err = t.estabFromHeader(conn)
 		if err != nil {
 			hlog.Error(err)
 			return err
 		}
+		//go func() {
+		//	_, err := io.Copy(destConn, conn)
+		//	errChan <- err
+		//}()
+		//go func() {
+		//	_, err := io.Copy(conn, destConn)
+		//	errChan <- err
+		//}()
 		go func() {
-			_, err := io.Copy(destConn, conn)
-			errChan <- err
+			errChan <- copyConn(destConn, conn, func(i int64) { t.curTraffic.Add(i) })
 		}()
 		go func() {
-			_, err := io.Copy(conn, destConn)
-			errChan <- err
+			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
 		}()
 		_, _ = io.Copy(destConn, reader)
 	} else {
@@ -189,7 +197,7 @@ func (t *TCPConnector) handleConn(rawConn net.Conn) error {
 		}
 		hlog.Debugf("direct send bytes, %s =====> %s =====> %s", conn.RemoteAddr(), conn.LocalAddr(), destConn.RemoteAddr())
 		go func() {
-			errChan <- copyConn(conn, destConn, nil)
+			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
 		}()
 		go func() {
 			errChan <- copyConn(destConn, conn, func(i int64) {

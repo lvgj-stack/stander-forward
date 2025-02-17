@@ -37,6 +37,7 @@ type TLSConnector struct {
 	curTraffic  atomic.Int64
 	listenPort  int
 	releaseLock sync.Mutex
+	timeout     time.Duration
 }
 
 func (t *TLSConnector) InitConfig(src, chain, raddr, serverName string, certBytes, keyBytes, caBytes []byte) error {
@@ -79,7 +80,10 @@ func (t *TLSConnector) InitConfig(src, chain, raddr, serverName string, certByte
 	t.Chain = chain
 	t.RAddr = raddr
 	t.Src = src
-	t.reportCurTraffic()
+	if !(t.Chain == "" && t.RAddr == "") {
+		t.reportCurTraffic()
+	}
+	t.timeout = 10 * time.Minute
 	return nil
 }
 
@@ -164,7 +168,7 @@ func (t *TLSConnector) reportCurTraffic() {
 			} else {
 				hlog.Errorf("ReportNetworkTraffic failed, localAddr: %s, err: %v", t.listener.Addr().String(), err)
 			}
-			time.Sleep(30 * time.Second)
+			time.Sleep(time.Minute)
 		}
 	}()
 }
@@ -208,13 +212,31 @@ func (t *TLSConnector) handleConn(conn net.Conn) error {
 		}
 		go func() {
 			defer wg.Done()
-			errChan <- copyConn(conn, destConn, nil)
+			go func() {
+				errChan <- copyConn(conn, destConn, func(n int64) {
+					t.curTraffic.Add(n)
+				})
+			}()
+			select {
+			case err = <-errChan:
+				return
+			case <-time.After(t.timeout):
+				return
+			}
 		}()
 		go func() {
 			defer wg.Done()
-			errChan <- copyConn(destConn, conn, func(n int64) {
-				t.curTraffic.Add(n)
-			})
+			go func() {
+				errChan <- copyConn(destConn, conn, func(n int64) {
+					t.curTraffic.Add(n)
+				})
+			}()
+			select {
+			case err = <-errChan:
+				return
+			case <-time.After(t.timeout):
+				return
+			}
 		}()
 		wg.Wait()
 		return err
@@ -255,13 +277,13 @@ func (t *TLSConnector) handleConn(conn net.Conn) error {
 			return err
 		}
 		go func() {
-			_, err = io.Copy(conn, destConn)
-			//errChan <- copyConn(conn, destConn, nil)
+			//_, err = io.Copy(conn, destConn)
+			errChan <- copyConn(conn, destConn, func(n int64) { t.curTraffic.Add(n) })
 			errChan <- err
 		}()
 		go func() {
-			_, err = io.Copy(destConn, conn)
-			//errChan <- copyConn(destConn, conn, nil)
+			//_, err = io.Copy(destConn, conn)
+			errChan <- copyConn(destConn, conn, func(n int64) { t.curTraffic.Add(n) })
 			errChan <- err
 		}()
 		err = <-errChan

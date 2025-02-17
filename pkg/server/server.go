@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"time"
 
 	"github.com/cloudwego/hertz/pkg/app/server"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/Mr-LvGJ/stander/pkg/api"
 	"github.com/Mr-LvGJ/stander/pkg/config"
+	"github.com/Mr-LvGJ/stander/pkg/service"
 )
 
 func InitController(c *config.Config) {
@@ -24,6 +26,7 @@ func InitController(c *config.Config) {
 	))
 
 	hlog.SetLevel(hlog.Level(c.Server.LogLevel))
+	service.Setup(context.Background())
 	api.InitControllerRoute(h)
 	h.Spin()
 }

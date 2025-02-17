@@ -1,12 +1,12 @@
 Server:
   Port: 8123
   NodeRole: Controller
-  LogLevel: 2 # info
+  LogLevel: 0 # info
 EnableRelay: False
 EnableHttp: True
 Database:
-  Username: stander
+  Username: root
   Password: Lgj0873967111...
   DBName: stander
 #  Addr: 115.238.185.22:53306
-  Addr: mysql-4594358b577b-public.rds.volces.com:3306
+  Addr: 10.37.26.209:3306

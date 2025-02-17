@@ -34,6 +34,9 @@ func ChainSrv(c context.Context, ctx *app.RequestContext) {
 	case "ListChains":
 		resp, err := listChain(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
+	case "EditChain":
+		resp, err := editChain(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
 	default:
 		error2.WriteResponse(ctx, errors.New("action not found"), nil)
 	}
@@ -215,4 +218,21 @@ func listChain(c context.Context, ctx *app.RequestContext) (*resp.ListChainResp,
 	}
 
 	return &resp.ListChainResp{Chains: chains, TotalCount: cnt}, nil
+}
+
+func editChain(ctx context.Context, c *app.RequestContext) (*resp.EditChainResp, error) {
+	r := req.EditChainReq{}
+	if err := c.BindAndValidate(&r); err != nil {
+		return nil, err
+	}
+
+	if config.GetRole() == string(common.Agent) {
+		return &resp.EditChainResp{}, nil
+	}
+
+	_, err := dal.Chain.WithContext(ctx).Where(dal.Chain.ID.Eq(r.ID)).Update(dal.Chain.ChainName, r.ChainName)
+	if err != nil {
+		return nil, err
+	}
+	return &resp.EditChainResp{}, nil
 }

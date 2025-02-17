@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -596,7 +595,7 @@ func (f *UDPForwarder) Start() error {
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
 				}
-				log.Printf("读取数据失败: %v", err)
+				hlog.Errorf("读取数据失败: %v", err)
 				continue
 			}
 
@@ -636,7 +635,7 @@ func (f *UDPForwarder) handlePacket(clientAddr *net.UDPAddr, data []byte) {
 		// 创建到目标的新连接
 		targetConn, err := net.DialUDP("udp", nil, f.targetAddr)
 		if err != nil {
-			log.Printf("创建到目标的连接失败: %v", err)
+			hlog.Errorf("创建到目标的连接失败: %v", err)
 			return
 		}
 
@@ -666,7 +665,7 @@ func (f *UDPForwarder) handlePacket(clientAddr *net.UDPAddr, data []byte) {
 	// 转发数据到目标
 	_, err := client.targetConn.Write(data)
 	if err != nil {
-		log.Printf("转发数据到目标失败: %v", err)
+		hlog.Errorf("转发数据到目标失败: %v", err)
 		f.closeClient(clientKey, client)
 	}
 }
@@ -691,7 +690,7 @@ func (f *UDPForwarder) handleTargetReturn(clientAddr *net.UDPAddr, client *Clien
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
 				}
-				log.Printf("从目标读取数据失败: %v", err)
+				hlog.Errorf("从目标读取数据失败: %v", err)
 				f.closeClient(clientKey, client)
 				return
 			}
@@ -699,7 +698,7 @@ func (f *UDPForwarder) handleTargetReturn(clientAddr *net.UDPAddr, client *Clien
 			// 将数据发送回客户端
 			_, err = f.conn.WriteToUDP(buffer[:n], clientAddr)
 			if err != nil {
-				log.Printf("发送数据回客户端失败: %v", err)
+				hlog.Errorf("发送数据回客户端失败: %v", err)
 				f.closeClient(clientKey, client)
 				return
 			}
@@ -742,7 +741,7 @@ func (f *UDPForwarder) cleanupExpiredClients() {
 			for _, key := range expiredKeys {
 				if clientValue, ok := f.clients.Load(key); ok {
 					client := clientValue.(*Client)
-					log.Printf("清理过期连接: %s", key)
+					hlog.Infof("清理过期连接: %s", key)
 					f.closeClient(key, client)
 				}
 			}
