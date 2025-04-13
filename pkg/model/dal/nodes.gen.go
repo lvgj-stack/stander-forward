@@ -33,6 +33,7 @@ func newNode(db *gorm.DB, opts ...gen.DOOption) node {
 	_node.DeletedAt = field.NewField(tableName, "deleted_at")
 	_node.NodeName = field.NewString(tableName, "node_name")
 	_node.IP = field.NewString(tableName, "ip")
+	_node.ManagerIP = field.NewString(tableName, "manager_ip")
 	_node.Port = field.NewInt32(tableName, "port")
 	_node.Key = field.NewString(tableName, "key")
 	_node.Status = field.NewString(tableName, "status")
@@ -40,6 +41,8 @@ func newNode(db *gorm.DB, opts ...gen.DOOption) node {
 	_node.Ipv4 = field.NewString(tableName, "ipv4")
 	_node.Ipv6 = field.NewString(tableName, "ipv6")
 	_node.Rate = field.NewFloat32(tableName, "rate")
+	_node.Protocol = field.NewInt32(tableName, "protocol")
+	_node.Iepl = field.NewInt32(tableName, "iepl")
 
 	_node.fillFieldMap()
 
@@ -56,6 +59,7 @@ type node struct {
 	DeletedAt field.Field
 	NodeName  field.String
 	IP        field.String
+	ManagerIP field.String
 	Port      field.Int32
 	Key       field.String
 	Status    field.String
@@ -63,6 +67,8 @@ type node struct {
 	Ipv4      field.String
 	Ipv6      field.String
 	Rate      field.Float32
+	Protocol  field.Int32 // 0=TLS,1=TCP
+	Iepl      field.Int32
 
 	fieldMap map[string]field.Expr
 }
@@ -85,6 +91,7 @@ func (n *node) updateTableName(table string) *node {
 	n.DeletedAt = field.NewField(table, "deleted_at")
 	n.NodeName = field.NewString(table, "node_name")
 	n.IP = field.NewString(table, "ip")
+	n.ManagerIP = field.NewString(table, "manager_ip")
 	n.Port = field.NewInt32(table, "port")
 	n.Key = field.NewString(table, "key")
 	n.Status = field.NewString(table, "status")
@@ -92,6 +99,8 @@ func (n *node) updateTableName(table string) *node {
 	n.Ipv4 = field.NewString(table, "ipv4")
 	n.Ipv6 = field.NewString(table, "ipv6")
 	n.Rate = field.NewFloat32(table, "rate")
+	n.Protocol = field.NewInt32(table, "protocol")
+	n.Iepl = field.NewInt32(table, "iepl")
 
 	n.fillFieldMap()
 
@@ -116,13 +125,14 @@ func (n *node) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (n *node) fillFieldMap() {
-	n.fieldMap = make(map[string]field.Expr, 13)
+	n.fieldMap = make(map[string]field.Expr, 16)
 	n.fieldMap["id"] = n.ID
 	n.fieldMap["created_at"] = n.CreatedAt
 	n.fieldMap["updated_at"] = n.UpdatedAt
 	n.fieldMap["deleted_at"] = n.DeletedAt
 	n.fieldMap["node_name"] = n.NodeName
 	n.fieldMap["ip"] = n.IP
+	n.fieldMap["manager_ip"] = n.ManagerIP
 	n.fieldMap["port"] = n.Port
 	n.fieldMap["key"] = n.Key
 	n.fieldMap["status"] = n.Status
@@ -130,6 +140,8 @@ func (n *node) fillFieldMap() {
 	n.fieldMap["ipv4"] = n.Ipv4
 	n.fieldMap["ipv6"] = n.Ipv6
 	n.fieldMap["rate"] = n.Rate
+	n.fieldMap["protocol"] = n.Protocol
+	n.fieldMap["iepl"] = n.Iepl
 }
 
 func (n node) clone(db *gorm.DB) node {

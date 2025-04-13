@@ -12,15 +12,16 @@ const TableNameUser = "user"
 
 // User mapped from table <user>
 type User struct {
-	ID             *int32      `gorm:"column:id;type:int" json:"id"`
-	Username       *string     `gorm:"column:username;type:varchar(50)" json:"username"`
-	Password       *string     `gorm:"column:password;type:varchar(255)" json:"password"`
-	Enable         *int32      `gorm:"column:enable;type:tinyint" json:"enable"`
-	CreateTime     *time.Time  `gorm:"column:createTime;type:datetime(6)" json:"createTime"`
-	UpdateTime     *time.Time  `gorm:"column:updateTime;type:datetime(6)" json:"updateTime"`
-	PlanID         int64       `gorm:"column:plan_id;type:bigint;not null" json:"planId"`
-	ExpirationTime *time.Time  `gorm:"column:expiration_time;type:datetime(3)" json:"expirationTime"`
-	TrafficPlan    TrafficPlan `gorm:"foreignKey:ID;references:PlanID" json:"traffic_plan"`
+	ID               *int32      `gorm:"column:id;type:int" json:"id"`
+	Username         *string     `gorm:"column:username;type:varchar(50)" json:"username"`
+	Password         *string     `gorm:"column:password;type:varchar(255)" json:"password"`
+	Enable           *int32      `gorm:"column:enable;type:tinyint" json:"enable"`
+	CreateTime       *time.Time  `gorm:"column:createTime;type:datetime(6)" json:"createTime"`
+	UpdateTime       *time.Time  `gorm:"column:updateTime;type:datetime(6)" json:"updateTime"`
+	PlanID           int64       `gorm:"column:plan_id;type:bigint;not null" json:"planId"`
+	ExpirationTime   *time.Time  `gorm:"column:expiration_time;type:datetime(3)" json:"expirationTime"`
+	ResetTrafficTime *time.Time  `gorm:"column:reset_traffic_time;type:datetime(3)" json:"resetTrafficTime"`
+	TrafficPlan      TrafficPlan `gorm:"foreignKey:ID;references:PlanID" json:"traffic_plan"`
 }
 
 // TableName User's table name

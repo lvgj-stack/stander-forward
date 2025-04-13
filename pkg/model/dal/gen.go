@@ -19,6 +19,7 @@ var (
 	Q                    = new(Query)
 	Chain                *chain
 	Node                 *node
+	NodeChainMapping     *nodeChainMapping
 	Rule                 *rule
 	TrafficPlan          *trafficPlan
 	User                 *user
@@ -31,6 +32,7 @@ func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Chain = &Q.Chain
 	Node = &Q.Node
+	NodeChainMapping = &Q.NodeChainMapping
 	Rule = &Q.Rule
 	TrafficPlan = &Q.TrafficPlan
 	User = &Q.User
@@ -44,6 +46,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 		db:                   db,
 		Chain:                newChain(db, opts...),
 		Node:                 newNode(db, opts...),
+		NodeChainMapping:     newNodeChainMapping(db, opts...),
 		Rule:                 newRule(db, opts...),
 		TrafficPlan:          newTrafficPlan(db, opts...),
 		User:                 newUser(db, opts...),
@@ -58,6 +61,7 @@ type Query struct {
 
 	Chain                chain
 	Node                 node
+	NodeChainMapping     nodeChainMapping
 	Rule                 rule
 	TrafficPlan          trafficPlan
 	User                 user
@@ -73,6 +77,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 		db:                   db,
 		Chain:                q.Chain.clone(db),
 		Node:                 q.Node.clone(db),
+		NodeChainMapping:     q.NodeChainMapping.clone(db),
 		Rule:                 q.Rule.clone(db),
 		TrafficPlan:          q.TrafficPlan.clone(db),
 		User:                 q.User.clone(db),
@@ -95,6 +100,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 		db:                   db,
 		Chain:                q.Chain.replaceDB(db),
 		Node:                 q.Node.replaceDB(db),
+		NodeChainMapping:     q.NodeChainMapping.replaceDB(db),
 		Rule:                 q.Rule.replaceDB(db),
 		TrafficPlan:          q.TrafficPlan.replaceDB(db),
 		User:                 q.User.replaceDB(db),
@@ -107,6 +113,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 type queryCtx struct {
 	Chain                *chainDo
 	Node                 *nodeDo
+	NodeChainMapping     *nodeChainMappingDo
 	Rule                 *ruleDo
 	TrafficPlan          *trafficPlanDo
 	User                 *userDo
@@ -119,6 +126,7 @@ func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Chain:                q.Chain.WithContext(ctx),
 		Node:                 q.Node.WithContext(ctx),
+		NodeChainMapping:     q.NodeChainMapping.WithContext(ctx),
 		Rule:                 q.Rule.WithContext(ctx),
 		TrafficPlan:          q.TrafficPlan.WithContext(ctx),
 		User:                 q.User.WithContext(ctx),

@@ -7,6 +7,7 @@ import (
 	"github.com/cloudwego/hertz/pkg/app"
 	"github.com/cloudwego/hertz/pkg/common/hlog"
 	"github.com/google/uuid"
+	"github.com/thoas/go-funk"
 	"gorm.io/gen"
 	"gorm.io/gorm"
 
@@ -26,21 +27,46 @@ func NodeSrv(c context.Context, ctx *app.RequestContext) {
 	case "AddNode":
 		resp, err := addNode(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
-	case "EditNode":
-		resp, err := editNode(c, ctx)
-		error2.WriteResponse(ctx, err, resp)
-	case "DeleteNode":
-		resp, err := delNode(c, ctx)
-		error2.WriteResponse(ctx, err, resp)
 	case "RegisterNode":
 		resp, err := registerNode(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
 	case "ListNodes":
 		resp, err := listNode(c, ctx)
 		error2.WriteResponse(ctx, err, resp)
+	case "GetNodePermissions":
+		resp, err := getNodePermissions(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
+	case "ListNodeChainRelationShips":
+		resp, err := listNodeChainRelationShips(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
+	case "DeleteNode":
+		resp, err := delNode(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
+	case "EditNode":
+		resp, err := editNode(c, ctx)
+		error2.WriteResponse(ctx, err, resp)
 	default:
 		error2.WriteResponse(ctx, errors.New("action not found"), nil)
 	}
+}
+
+func checkUserNodePermission(ctx context.Context, c *app.RequestContext, nodeIds ...int64) error {
+	if c.GetString(common.HeaderRoleKey) == common.SUPER_ADMIN {
+		return nil
+	}
+	var availableNodeIds []int64
+	if err := dal.UserRoleNodeMapping.WithContext(ctx).Select(dal.UserRoleNodeMapping.NodeID).
+		Where(dal.UserRoleNodeMapping.UserID.Eq(c.GetInt32(common.HeaderUserKey))).
+		Scan(&availableNodeIds); err != nil {
+		return err
+	}
+
+	for _, id := range nodeIds {
+		if !funk.ContainsInt64(availableNodeIds, id) {
+			return permissionDenyError
+		}
+	}
+	return nil
 }
 
 func addNode(c context.Context, ctx *app.RequestContext) (*resp.AddNodeResp, error) {
@@ -54,6 +80,7 @@ func addNode(c context.Context, ctx *app.RequestContext) (*resp.AddNodeResp, err
 			NodeName: &r.NodeName,
 			Key:      &uid,
 			NodeType: &r.NodeType,
+			Rate:     r.Rate,
 		}); err != nil {
 			return nil, err
 		}
@@ -97,6 +124,9 @@ func delNode(c context.Context, ctx *app.RequestContext) (*resp.DelNodeResp, err
 			Where(dal.UserRoleNodeMapping.UserID.Eq(ctx.GetInt32(common.HeaderUserKey)), dal.UserRoleNodeMapping.NodeID.Eq(int32(r.ID))).
 			Preload(dal.UserRoleNodeMapping.Node).First()
 		if err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, permissionDenyError
+			}
 			return nil, err
 		}
 		node := nodeM.Node
@@ -140,6 +170,7 @@ func registerNode(c context.Context, ctx *app.RequestContext) (*resp.RegisterNod
 	port := r.Port
 	ipv4 := r.Ipv4
 	ipv6 := r.Ipv6
+	managerIp := r.ManagerIp
 
 	if r.PreferIpv6 {
 		clientIP = ipv6
@@ -153,6 +184,9 @@ func registerNode(c context.Context, ctx *app.RequestContext) (*resp.RegisterNod
 		clientIP = ctx.ClientIP()
 	}
 
+	if managerIp == "" {
+		managerIp = clientIP
+	}
 	rules, err := dal.Rule.WithContext(c).Where(dal.Rule.NodeID.Eq(node.ID)).Find()
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -184,7 +218,13 @@ func registerNode(c context.Context, ctx *app.RequestContext) (*resp.RegisterNod
 		}
 		res.Rules = append(res.Rules, ruleVo)
 	}
-	_, err = dal.Q.Node.WithContext(c).Where(dal.Node.Key.Eq(key)).Updates(entity.Node{IP: &clientIP, Port: &port, Ipv4: &ipv4, Ipv6: &ipv6})
+	_, err = dal.Q.Node.WithContext(c).Where(dal.Node.Key.Eq(key)).Updates(entity.Node{
+		IP:        &clientIP,
+		Port:      &port,
+		Ipv4:      &ipv4,
+		Ipv6:      &ipv6,
+		ManagerIP: managerIp,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -192,8 +232,8 @@ func registerNode(c context.Context, ctx *app.RequestContext) (*resp.RegisterNod
 }
 
 func listNode(c context.Context, ctx *app.RequestContext) (*resp.ListNodeResp, error) {
-	req := req.ListNodeReq{}
-	if err := ctx.BindAndValidate(&req); err != nil {
+	r := req.ListNodeReq{}
+	if err := ctx.BindAndValidate(&r); err != nil {
 		return nil, err
 	}
 	if config.GetRole() == string(common.Agent) {
@@ -201,34 +241,42 @@ func listNode(c context.Context, ctx *app.RequestContext) (*resp.ListNodeResp, e
 	}
 
 	var nodeIds []int64
-	if err := dal.UserRoleNodeMapping.WithContext(c).Select(dal.UserRoleNodeMapping.NodeID).
-		Where(dal.UserRoleNodeMapping.UserID.Eq(ctx.GetInt32(common.HeaderUserKey))).
-		Or(dal.UserRoleNodeMapping.RoleCode.Eq(ctx.GetString(common.HeaderRoleKey))).Scan(&nodeIds); err != nil {
-		return nil, err
+	if r.Scene == "" || ctx.GetString(common.HeaderRoleKey) == common.SUPER_ADMIN {
+		if err := dal.UserRoleNodeMapping.WithContext(c).Select(dal.UserRoleNodeMapping.NodeID).
+			Where(dal.UserRoleNodeMapping.UserID.Eq(ctx.GetInt32(common.HeaderUserKey))).
+			Or(dal.UserRoleNodeMapping.RoleCode.Eq(ctx.GetString(common.HeaderRoleKey))).Scan(&nodeIds); err != nil {
+			return nil, err
+		}
+	} else if r.Scene == req.AddChainScene {
+		if err := dal.UserRoleNodeMapping.WithContext(c).Select(dal.UserRoleNodeMapping.NodeID).
+			Where(dal.UserRoleNodeMapping.UserID.Eq(ctx.GetInt32(common.HeaderUserKey))).
+			Scan(&nodeIds); err != nil {
+			return nil, err
+		}
 	}
 
 	var q []gen.Condition
 	if ctx.GetString(common.HeaderRoleKey) != "SUPER_ADMIN" {
 		q = append(q, dal.Node.ID.In(nodeIds...))
 	}
-	if req.NodeType != "" {
-		q = append(q, dal.Node.NodeType.Eq(req.NodeType))
+	if r.NodeType != "" {
+		q = append(q, dal.Node.NodeType.Eq(r.NodeType))
 	}
-	if req.NodeName != "" {
-		q = append(q, dal.Node.NodeName.Like("%"+req.NodeName+"%"))
+	if r.NodeName != "" {
+		q = append(q, dal.Node.NodeName.Like("%"+r.NodeName+"%"))
 	}
-	if req.PageSize == 0 {
-		req.PageSize = 10
+	if r.PageSize == 0 {
+		r.PageSize = 10
 	}
-	if req.PageNo == 0 {
-		req.PageNo = 1
+	if r.PageNo == 0 {
+		r.PageNo = 1
 	}
-	if req.PageNo == -1 {
-		req.PageSize = 1000
+	if r.PageNo == -1 {
+		r.PageSize = 1000
 	}
 	nodes, cnt, err := dal.Node.WithContext(c).
 		Where(q...).Order(dal.Node.UpdatedAt.Desc()).
-		FindByPage(int((req.PageNo-1)*req.PageSize), int(req.PageSize))
+		FindByPage(int((r.PageNo-1)*r.PageSize), int(r.PageSize))
 	if err != nil {
 		return nil, err
 	}
@@ -245,6 +293,10 @@ func editNode(c context.Context, ctx *app.RequestContext) (*resp.EditNodeResp, e
 		return &resp.EditNodeResp{}, nil
 	}
 
+	if err := checkUserNodePermission(c, ctx, r.ID); err != nil {
+		return nil, err
+	}
+
 	updateFields := make(map[string]any)
 	if r.NodeName != "" {
 		updateFields["node_name"] = r.NodeName
@@ -258,4 +310,70 @@ func editNode(c context.Context, ctx *app.RequestContext) (*resp.EditNodeResp, e
 		return nil, err
 	}
 	return &resp.EditNodeResp{}, nil
+}
+
+func listNodeChainRelationShips(ctx context.Context, c *app.RequestContext) (*resp.ListNodeChainRelationShipsResp, error) {
+	r := req.ListNodeChainRelationShipsReq{}
+	if err := c.BindAndValidate(&r); err != nil {
+		return nil, err
+	}
+
+	node, err := dal.Node.WithContext(ctx).Where(dal.Node.ID.Eq(r.NodeId)).First()
+	if err != nil {
+		return nil, err
+	}
+	if node.Iepl != 0 {
+		return &resp.ListNodeChainRelationShipsResp{}, err
+	}
+
+	var availableChainIds []int64
+	if err := dal.UserRoleChainMapping.WithContext(ctx).Select(dal.UserRoleChainMapping.ChainID).
+		Where(dal.UserRoleChainMapping.UserID.Eq(c.GetInt32(common.HeaderUserKey))).
+		Or(dal.UserRoleChainMapping.RoleCode.Eq(c.GetString(common.HeaderRoleKey))).Scan(&availableChainIds); err != nil {
+		return nil, err
+	}
+
+	var nodeAvailableChainIds []int64
+	if err := dal.NodeChainMapping.WithContext(ctx).Select(dal.NodeChainMapping.ChainID).Where(
+		dal.NodeChainMapping.NodeID.Eq(r.NodeId)).Scan(&nodeAvailableChainIds); err != nil {
+		return nil, err
+	}
+
+	var userSelfChainIds []int64
+	if err := dal.UserRoleChainMapping.WithContext(ctx).Select(dal.UserRoleChainMapping.ChainID).
+		Where(dal.UserRoleChainMapping.UserID.Eq(c.GetInt32(common.HeaderUserKey))).
+		Scan(&userSelfChainIds); err != nil {
+		return nil, err
+	}
+
+	chains, err := dal.Chain.WithContext(ctx).Where(dal.Chain.ID.In(availableChainIds...),
+		dal.Chain.ID.In(nodeAvailableChainIds...)).
+		Or(dal.Chain.ID.In(userSelfChainIds...)).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	return &resp.ListNodeChainRelationShipsResp{
+		Chains: chains,
+	}, nil
+}
+
+func getNodePermissions(ctx context.Context, c *app.RequestContext) ([]int64, error) {
+	r := req.EmptyReq{}
+	if err := c.BindAndValidate(&r); err != nil {
+		return nil, err
+	}
+	var availableNodeIds []int64
+	if c.GetString(common.HeaderRoleKey) == common.SUPER_ADMIN {
+		if err := dal.Node.WithContext(ctx).Select(dal.Node.ID).Scan(&availableNodeIds); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := dal.UserRoleNodeMapping.WithContext(ctx).Select(dal.UserRoleNodeMapping.NodeID).
+			Where(dal.UserRoleNodeMapping.UserID.Eq(c.GetInt32(common.HeaderUserKey))).
+			Scan(&availableNodeIds); err != nil {
+			return nil, err
+		}
+	}
+	return availableNodeIds, nil
 }

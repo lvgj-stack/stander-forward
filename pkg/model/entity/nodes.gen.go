@@ -20,6 +20,7 @@ type Node struct {
 	DeletedAt gorm.DeletedAt `gorm:"column:deleted_at;type:datetime(3);index:idx_chains_deleted_at,priority:1" json:"deletedAt"`
 	NodeName  *string        `gorm:"column:node_name;type:varchar(255)" json:"nodeName"`
 	IP        *string        `gorm:"column:ip;type:varchar(255)" json:"ip"`
+	ManagerIP string         `gorm:"column:manager_ip;type:varchar(255);not null" json:"managerIp"`
 	Port      *int32         `gorm:"column:port;type:int" json:"port"`
 	Key       *string        `gorm:"column:key;type:varchar(255)" json:"key"`
 	Status    *string        `gorm:"column:status;type:varchar(255);default:8123" json:"status"`
@@ -27,6 +28,8 @@ type Node struct {
 	Ipv4      *string        `gorm:"column:ipv4;type:varchar(255)" json:"ipv4"`
 	Ipv6      *string        `gorm:"column:ipv6;type:varchar(255)" json:"ipv6"`
 	Rate      float32        `gorm:"column:rate;type:float;not null;default:1" json:"rate"`
+	Protocol  int32          `gorm:"column:protocol;type:tinyint;not null;comment:0=TLS,1=TCP" json:"protocol"` // 0=TLS,1=TCP
+	Iepl      int32          `gorm:"column:iepl;type:tinyint;not null" json:"iepl"`
 }
 
 // TableName Node's table name

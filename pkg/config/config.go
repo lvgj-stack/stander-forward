@@ -22,10 +22,12 @@ type Agent struct {
 	ControllerAddr string
 	NodeKey        string
 	IP             string
+	ManagerIp      string
 	IPv6           string
 	Port           int32
 	PreferIpv6     bool
 	EnableUdp      bool
+	EnableGost     bool
 	ListenIp       string
 }
 

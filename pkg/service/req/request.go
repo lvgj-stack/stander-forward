@@ -55,6 +55,7 @@ type RegisterNodeReq struct {
 	Ipv4       string `json:"Ipv4"`
 	Ipv6       string `json:"Ipv6"`
 	PreferIpv6 bool   `json:"PreferIpv6"`
+	ManagerIp  string `json:"ManagerIp"`
 }
 
 type DelRuleReq struct {
@@ -96,7 +97,16 @@ type ListNodeReq struct {
 	PageNo   int32  `json:"PageNo,omitempty"`
 	NodeName string `json:"NodeName,omitempty"`
 	NodeType string `json:"nodeType,omitempty"`
+
+	Scene ListNodeScene `json:"Scene"`
 }
+
+type ListNodeScene string
+
+const (
+	DefaultListNodeScene ListNodeScene = ""
+	AddChainScene        ListNodeScene = "AddChainScene"
+)
 
 type ReportNetworkTrafficReq struct {
 	Port    int32 `json:"Port,required"`
@@ -128,4 +138,26 @@ type ListUsersReq struct {
 type EditUserReq struct {
 	ID             int32
 	ExpirationTime *time.Time
+}
+
+type EmptyReq struct {
+}
+
+type ListNodeChainRelationShipsReq struct {
+	NodeId int64
+}
+
+type ObserverNetworkTrafficReq struct {
+	Events []struct {
+		Kind    string `json:"kind"`
+		Service string `json:"service"`
+		Type    string `json:"type"`
+		Stats   struct {
+			TotalConns   int64 `json:"totalConns"`
+			CurrentConns int64 `json:"currentConns"`
+			InputBytes   int64 `json:"inputBytes"`
+			OutputBytes  int64 `json:"outputBytes"`
+			TotalErrs    int64 `json:"totalErrs"`
+		} `json:"stats"`
+	} `json:"events"`
 }

@@ -17,9 +17,9 @@ func main() {
 	var DB *gorm.DB
 
 	model.InitMysql(&config.Database{
-		Username: "stander",
+		Username: "root",
 		Password: "Lgj0873967111...",
-		Addr:     "mysql-5b8c7ef1c075-public.rds.volces.com:3306",
+		Addr:     "alihk.byte.gs:3306",
 		DBName:   "stander",
 	})
 	DB = model.GetDb()
@@ -52,6 +52,7 @@ func main() {
 	node := g.GenerateModel("nodes")
 	trafficPlan := g.GenerateModel("traffic_plan")
 	udt := g.GenerateModel("user_daily_traffic")
+	ncm := g.GenerateModel("node_chain_mappings")
 	chain := g.GenerateModel("chains", gen.FieldRelate(field.HasOne, "Node", node,
 		&field.RelateConfig{
 			GORMTag: field.GormTag{"references": []string{"NodeID"}, "foreignKey": []string{"ID"}},
@@ -87,6 +88,7 @@ func main() {
 		udt,
 		trafficPlan,
 		user,
+		ncm,
 	)
 
 	g.Execute()

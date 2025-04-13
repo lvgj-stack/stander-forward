@@ -35,6 +35,7 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 	_user.UpdateTime = field.NewTime(tableName, "updateTime")
 	_user.PlanID = field.NewInt64(tableName, "plan_id")
 	_user.ExpirationTime = field.NewTime(tableName, "expiration_time")
+	_user.ResetTrafficTime = field.NewTime(tableName, "reset_traffic_time")
 	_user.TrafficPlan = userHasOneTrafficPlan{
 		db: db.Session(&gorm.Session{}),
 
@@ -49,16 +50,17 @@ func newUser(db *gorm.DB, opts ...gen.DOOption) user {
 type user struct {
 	userDo userDo
 
-	ALL            field.Asterisk
-	ID             field.Int32
-	Username       field.String
-	Password       field.String
-	Enable         field.Int32
-	CreateTime     field.Time
-	UpdateTime     field.Time
-	PlanID         field.Int64
-	ExpirationTime field.Time
-	TrafficPlan    userHasOneTrafficPlan
+	ALL              field.Asterisk
+	ID               field.Int32
+	Username         field.String
+	Password         field.String
+	Enable           field.Int32
+	CreateTime       field.Time
+	UpdateTime       field.Time
+	PlanID           field.Int64
+	ExpirationTime   field.Time
+	ResetTrafficTime field.Time
+	TrafficPlan      userHasOneTrafficPlan
 
 	fieldMap map[string]field.Expr
 }
@@ -83,6 +85,7 @@ func (u *user) updateTableName(table string) *user {
 	u.UpdateTime = field.NewTime(table, "updateTime")
 	u.PlanID = field.NewInt64(table, "plan_id")
 	u.ExpirationTime = field.NewTime(table, "expiration_time")
+	u.ResetTrafficTime = field.NewTime(table, "reset_traffic_time")
 
 	u.fillFieldMap()
 
@@ -107,7 +110,7 @@ func (u *user) GetFieldByName(fieldName string) (field.OrderExpr, bool) {
 }
 
 func (u *user) fillFieldMap() {
-	u.fieldMap = make(map[string]field.Expr, 9)
+	u.fieldMap = make(map[string]field.Expr, 10)
 	u.fieldMap["id"] = u.ID
 	u.fieldMap["username"] = u.Username
 	u.fieldMap["password"] = u.Password
@@ -116,6 +119,7 @@ func (u *user) fillFieldMap() {
 	u.fieldMap["updateTime"] = u.UpdateTime
 	u.fieldMap["plan_id"] = u.PlanID
 	u.fieldMap["expiration_time"] = u.ExpirationTime
+	u.fieldMap["reset_traffic_time"] = u.ResetTrafficTime
 
 }
 

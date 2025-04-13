@@ -34,6 +34,8 @@ func InitControllerRoute(h *server.Hertz) {
 
 func InitAgentRoute(h *server.Hertz) {
 	api := h.Group("/api/v1")
+	// for gost
+	api.POST("data", service.DataSrv)
 	api.Use(func(c context.Context, ctx *app.RequestContext) {
 		k := string(ctx.GetHeader(common.KeyHeader))
 		if k != config.GetKey() {

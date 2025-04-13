@@ -19,10 +19,12 @@ var (
 	nodeKey        string
 	ip             string
 	ipv6           string
+	managerIp      string
 	port           int32
 	logLevel       int
 	preferIpv6     bool
 	enableUdp      bool
+	enableGost     bool
 	listenIp       string
 )
 
@@ -32,11 +34,13 @@ func init() {
 	pflag.StringVarP(&nodeKey, "node-key", "k", "", "node specify key")
 	pflag.StringVarP(&ip, "ip", "", "", "ip")
 	pflag.StringVarP(&ipv6, "ipv6", "", "", "ipv6")
+	pflag.StringVarP(&managerIp, "manager-ip", "", "", "控制节点下发规则的ip")
 	pflag.StringVarP(&listenIp, "listen-ip", "", "", "listen ip")
 	pflag.Int32VarP(&port, "port", "p", 18123, "http port")
 	pflag.IntVarP(&logLevel, "log-level", "", 3, "log level")
 	pflag.BoolVarP(&preferIpv6, "prefer-ipv6", "", false, "prefer ipv6")
 	pflag.BoolVarP(&enableUdp, "enable-udp", "", true, "prefer ipv6")
+	pflag.BoolVarP(&enableGost, "enable-gost", "", false, "enable gost")
 	pflag.Parse()
 }
 
@@ -64,7 +68,9 @@ func main() {
 		c.Agent.Port = port
 		c.Agent.PreferIpv6 = preferIpv6
 		c.Agent.EnableUdp = enableUdp
+		c.Agent.EnableGost = enableGost
 		c.Agent.ListenIp = listenIp
+		c.Agent.ManagerIp = managerIp
 		config.SetConfig(c)
 		pkg.RunAgent(c)
 	} else {

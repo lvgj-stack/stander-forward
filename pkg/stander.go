@@ -33,6 +33,9 @@ func RunAgent(c *config.Config) {
 	req := &req.RegisterNodeReq{}
 	req.Port = 8123
 	req.Ipv4 = utils.GetOutBoundIPv4()
+	if utils.IsPrivateIP(req.Ipv4) {
+		req.Ipv4 = utils.GetOutBoundIPv4V2()
+	}
 	req.Ipv6 = utils.GetOutBoundIPv6()
 	req.IP = req.Ipv4
 	req.PreferIpv6 = c.Agent.PreferIpv6
@@ -51,6 +54,11 @@ func RunAgent(c *config.Config) {
 		req.IP = req.Ipv6
 	}
 
+	req.ManagerIp = req.IP
+	if c.Agent.ManagerIp != "" {
+		req.ManagerIp = c.Agent.ManagerIp
+	}
+	client.Init()
 	res, err := client.DoRequest(c.Agent.ControllerAddr, "node", "RegisterNode", c.Agent.NodeKey, req)
 	if err != nil {
 		panic(err)

@@ -75,7 +75,7 @@ func testRule(ctx context.Context, c *app.RequestContext) (*resp.TestRuleResp, e
 		res.InboundName = *rule.Node.NodeName
 		res.InboundTo = chainInAddr
 		req.Destination = chainInAddr
-		res1, err := client.DoRequest(fmt.Sprintf("%s:%d", *node.IP, *node.Port), "rule", "TestRule", *node.Key, req)
+		res1, err := client.DoRequest(fmt.Sprintf("%s:%d", node.ManagerIP, *node.Port), "rule", "TestRule", *node.Key, req)
 		if err != nil {
 			return nil, err
 		}
@@ -95,7 +95,7 @@ func testRule(ctx context.Context, c *app.RequestContext) (*resp.TestRuleResp, e
 		// chain ping destination
 		destinationAddr := *rule.RemoteAddr
 		req.Destination = destinationAddr
-		res2, err := client.DoRequest(fmt.Sprintf("%s:%d", *chainNode.IP, *chainNode.Port), "rule", "TestRule", *chainNode.Key, req)
+		res2, err := client.DoRequest(fmt.Sprintf("%s:%d", chainNode.ManagerIP, *chainNode.Port), "rule", "TestRule", *chainNode.Key, req)
 		if err != nil {
 			return nil, err
 		}
@@ -114,7 +114,7 @@ func testRule(ctx context.Context, c *app.RequestContext) (*resp.TestRuleResp, e
 		res.OutboundName = *rule.Node.NodeName
 		res.OutboundTo = destinationAddr
 		req.Destination = destinationAddr
-		res1, err := client.DoRequest(fmt.Sprintf("%s:%d", *node.IP, *node.Port), "rule", "TestRule", *node.Key, req)
+		res1, err := client.DoRequest(fmt.Sprintf("%s:%d", node.ManagerIP, *node.Port), "rule", "TestRule", *node.Key, req)
 		if err != nil {
 			return nil, err
 		}
@@ -160,7 +160,7 @@ func addRule(c context.Context, ctx *app.RequestContext) (*resp.AddRuleResp, err
 	if err != nil {
 		return nil, err
 	}
-	_, err = client.DoRequest(fmt.Sprintf("%s:%d", *node.IP, *node.Port), "rule", "AddRule", *node.Key, req)
+	_, err = client.DoRequest(fmt.Sprintf("%s:%d", node.ManagerIP, *node.Port), "rule", "AddRule", *node.Key, req)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +189,7 @@ func delRule(c context.Context, ctx *app.RequestContext) (*resp.DelRuleResp, err
 
 	if config.GetRole() == string(common.Agent) {
 		hlog.Infof("del rule, port: %d", req.Port)
-		if err := manager.DelPort(req.Port); err != nil {
+		if err := manager.DelPort(req.Port, manager.ServicePortType); err != nil {
 			return nil, err
 		}
 		return &resp.DelRuleResp{}, nil
@@ -219,7 +219,7 @@ func delRule(c context.Context, ctx *app.RequestContext) (*resp.DelRuleResp, err
 		return nil, err
 	}
 	req.Port = *rule.ListenPort
-	_, err = client.DoRequest(fmt.Sprintf("%s:%d", *node.IP, *node.Port), "rule", "DeleteRule", *node.Key, req)
+	_, err = client.DoRequest(fmt.Sprintf("%s:%d", node.ManagerIP, *node.Port), "rule", "DeleteRule", *node.Key, req)
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
 			hlog.Infof("del rule failed, err: %s", err.Error())
@@ -293,7 +293,7 @@ func modifyRule(ctx context.Context, c *app.RequestContext) (*resp.ModifyRuleRes
 	var needCallAgent bool
 
 	if config.GetRole() == string(common.Agent) {
-		if err := manager.DelPort(req.OldListenPort); err != nil {
+		if err := manager.DelPort(req.OldListenPort, manager.ServicePortType); err != nil {
 			hlog.Errorf("del rule failed, port: %d, err: %s", req.OldListenPort, err.Error())
 		}
 		if err := manager.AddRule(config.GetAgentConfig().ListenIp+":"+strconv.Itoa(int(req.ListenPort)), req.ChainAddr, req.RemoteAddr, common.ConnectorType(req.ChainType)); err != nil {
@@ -347,7 +347,7 @@ func modifyRule(ctx context.Context, c *app.RequestContext) (*resp.ModifyRuleRes
 	}
 
 	if needCallAgent {
-		_, err = client.DoRequest(utils.GenIpAndPort(*node.IP, *node.Port), "rule", "ModifyRule", *node.Key, agentModifyReq)
+		_, err = client.DoRequest(utils.GenIpAndPort(node.ManagerIP, *node.Port), "rule", "ModifyRule", *node.Key, agentModifyReq)
 		if err != nil {
 			return nil, err
 		}

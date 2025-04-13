@@ -2,6 +2,7 @@ package connector
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"errors"
@@ -118,7 +119,7 @@ func (t *TLSConnector) Close() error {
 }
 
 func (t *TLSConnector) writeWithHeader(conn net.Conn, destConn net.Conn) error {
-	if _, err := fmt.Fprintf(destConn, t.RAddr+"\n"); err != nil {
+	if _, err := fmt.Fprintf(destConn, "%s\n", t.RAddr); err != nil {
 		return err
 	}
 	return nil
@@ -177,7 +178,15 @@ func (t *TLSConnector) handleConn(conn net.Conn) error {
 	var (
 		destConn net.Conn
 		err      error
+		//br       *bufio.Reader
 	)
+	//if !(t.Chain == "" && t.RAddr == "") {
+	//	br, err = blockCheck(conn)
+	//	if err != nil {
+	//		hlog.Errorf("block conn, err: %v", err)
+	//		return err
+	//	}
+	//}
 
 	errChan := make(chan error, 10)
 
@@ -210,6 +219,7 @@ func (t *TLSConnector) handleConn(conn net.Conn) error {
 		if err := t.writeWithHeader(conn, destConn); err != nil {
 			return err
 		}
+		//destConn.Write(flushBuffered(br))
 		go func() {
 			defer wg.Done()
 			go func() {
@@ -289,6 +299,38 @@ func (t *TLSConnector) handleConn(conn net.Conn) error {
 		err = <-errChan
 		return err
 	}
+}
+
+func blockCheck(conn net.Conn) (*bufio.Reader, error) {
+	br := bufio.NewReaderSize(conn, 4096)
+	peekData, err := br.Peek(4)
+	if err != nil && err != io.EOF {
+		hlog.Errorf("读取数据失败:%v", err)
+		return br, nil
+	}
+	// 判断是否是 HTTP 请求
+	if isHTTPRequest(string(peekData)) {
+		// 处理 HTTP 请求（这里只是示范，可以在这里进行更多处理）
+		return nil, errors.New("http forbidden")
+	}
+	return br, nil
+}
+
+const httpMethods = "GET,POST,PUT"
+
+func isHTTPRequest(data string) bool {
+	// 检查HTTP方法
+	method := strings.Split(string(data), " ")[0]
+	return strings.Contains(httpMethods, method)
+}
+
+func flushBuffered(br *bufio.Reader) []byte {
+	var buf bytes.Buffer
+	if n := br.Buffered(); n > 0 {
+		buf.Grow(n)
+		buf.ReadFrom(io.LimitReader(br, int64(n)))
+	}
+	return buf.Bytes()
 }
 
 func (t *TLSConnector) StoreConn(m *sync.Map) {

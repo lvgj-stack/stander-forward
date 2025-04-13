@@ -91,6 +91,7 @@ func main() {
 
 // NewProxyServer 创建新的代理服务器
 func NewProxyServer(localAddrStr, proxyAddrStr, targetAddrStr string, timeout time.Duration) (*ProxyServer, error) {
+	hlog.Infof("NewProxyServer, local: %s, proxy: %s, target: %s", localAddrStr, proxyAddrStr, targetAddrStr)
 	localAddr, err := net.ResolveUDPAddr("udp", localAddrStr)
 	if err != nil {
 		return nil, fmt.Errorf("解析本地地址失败: %v", err)
@@ -111,7 +112,7 @@ func NewProxyServer(localAddrStr, proxyAddrStr, targetAddrStr string, timeout ti
 			return nil, fmt.Errorf("解析代理地址失败: %v", err)
 		}
 	}
-	hlog.Info("=>>>>>> target addr", targetAddrStr, "target", targetAddr)
+	hlog.Info("=>>>>>> target addr: ", targetAddrStr, "  target", targetAddr)
 	mode := ServerMode
 	if targetAddrStr != "" {
 		mode = ClientMode

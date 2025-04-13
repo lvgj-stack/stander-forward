@@ -43,15 +43,23 @@ func getUserPlanInfo(ctx context.Context, c *app.RequestContext) (*resp.GetUserP
 		return nil, err
 	}
 	dfs, err := dal.UserDailyTraffic.WithContext(ctx).Where(dal.UserDailyTraffic.UserID.Eq(*user.ID)).
-		Order(dal.UserDailyTraffic.Date.Asc()).Limit(30).Find()
+		Order(dal.UserDailyTraffic.Date.Desc()).Limit(30).Find()
 	if err != nil {
 		return nil, err
 	}
+
+	for i, j := 0, len(dfs)-1; i < j; i, j = i+1, j-1 {
+		dfs[i], dfs[j] = dfs[j], dfs[i]
+	}
 	expireTime := time.Now()
+	resetTrafficTime := time.Now()
 	usedTraffic := int64(0)
 	plan := "测试套餐"
 	if user.ExpirationTime != nil {
 		expireTime = *user.ExpirationTime
+	}
+	if user.ResetTrafficTime != nil {
+		resetTrafficTime = *user.ResetTrafficTime
 	}
 	if user.TrafficPlan.PlanName != nil {
 		plan = *user.TrafficPlan.PlanName
@@ -70,12 +78,13 @@ func getUserPlanInfo(ctx context.Context, c *app.RequestContext) (*resp.GetUserP
 
 	}
 	return &resp.GetUserPlanInfoResp{
-		Username:       *user.Username,
-		ExpirationTime: expireTime,
-		PlanTraffic:    int32(user.TrafficPlan.TotalTraffic / 1024 / 1024 / 1024),
-		UsedTraffic:    int32(usedTraffic),
-		PlanName:       plan,
-		DailyTraffics:  dailyTraffics,
+		Username:         *user.Username,
+		ExpirationTime:   expireTime,
+		ResetTrafficTime: resetTrafficTime,
+		PlanTraffic:      int32(user.TrafficPlan.TotalTraffic / 1024 / 1024 / 1024),
+		UsedTraffic:      int32(usedTraffic),
+		PlanName:         plan,
+		DailyTraffics:    dailyTraffics,
 	}, nil
 }
 

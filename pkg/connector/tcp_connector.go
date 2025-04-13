@@ -81,7 +81,7 @@ func (t *TCPConnector) Close() error {
 	return t.listener.Close()
 }
 
-func (t *TCPConnector) estabFromHeader(conn net.Conn) (*net.TCPConn, io.Reader, string, error) {
+func (t *TCPConnector) estabFromHeader(conn net.Conn) (net.Conn, io.Reader, string, error) {
 	reader := bufio.NewReader(conn)
 	firstLine, err := reader.ReadString('\n')
 	if err != nil {
@@ -130,12 +130,19 @@ func (t *TCPConnector) reportCurTraffic() {
 	}()
 }
 
-func (t *TCPConnector) handleConn(rawConn net.Conn) error {
+func (t *TCPConnector) handleConn(conn net.Conn) error {
 	var (
 		destConn net.Conn
 		err      error
+		//br       *bufio.Reader
 	)
-	conn := rawConn.(*net.TCPConn)
+	//if !(t.Chain == nil && t.RAddr == "") {
+	//	br, err = blockCheck(conn)
+	//	if err != nil {
+	//		hlog.Errorf("block conn, err: %v", err)
+	//		return err
+	//	}
+	//}
 	errChan := make(chan error, 10)
 	onClose := func() {
 		if conn != nil && conn.Close != nil {
@@ -154,9 +161,10 @@ func (t *TCPConnector) handleConn(rawConn net.Conn) error {
 			hlog.Error("connect to chain failed", "err", err.Error())
 			return err
 		}
-		if _, err := fmt.Fprintf(destConn, t.RAddr+"\n"); err != nil {
+		if _, err := fmt.Fprintf(destConn, "%s\n", t.RAddr); err != nil {
 			return err
 		}
+		//destConn.Write(flushBuffered(br))
 		go func() {
 			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
 		}()
@@ -181,10 +189,10 @@ func (t *TCPConnector) handleConn(rawConn net.Conn) error {
 		//	errChan <- err
 		//}()
 		go func() {
-			errChan <- copyConn(destConn, conn, func(i int64) { t.curTraffic.Add(i) })
+			errChan <- copyConn(destConn, conn, nil)
 		}()
 		go func() {
-			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
+			errChan <- copyConn(conn, destConn, nil)
 		}()
 		_, _ = io.Copy(destConn, reader)
 	} else {
@@ -196,6 +204,7 @@ func (t *TCPConnector) handleConn(rawConn net.Conn) error {
 			return err
 		}
 		hlog.Debugf("direct send bytes, %s =====> %s =====> %s", conn.RemoteAddr(), conn.LocalAddr(), destConn.RemoteAddr())
+		//destConn.Write(flushBuffered(br))
 		go func() {
 			errChan <- copyConn(conn, destConn, func(i int64) { t.curTraffic.Add(i) })
 		}()

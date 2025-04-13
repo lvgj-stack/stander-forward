@@ -1,11 +1,18 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -23,6 +30,59 @@ func GetOutBoundIPv4() string {
 		}
 	}()
 	return conn.LocalAddr().(*net.UDPAddr).IP.String()
+}
+
+func IsPrivateIP(ip string) bool {
+	parsedIP := net.ParseIP(ip)
+	if parsedIP == nil {
+		return false // 无效的IP
+	}
+
+	// 判断是否为局域网IP
+	privateCIDRs := []string{
+		"10.0.0.0/8",     // 10.0.0.0 - 10.255.255.255
+		"172.16.0.0/12",  // 172.16.0.0 - 172.31.255.255
+		"192.168.0.0/16", // 192.168.0.0 - 192.168.255.255
+	}
+
+	for _, cidr := range privateCIDRs {
+		_, network, err := net.ParseCIDR(cidr)
+		if err != nil {
+			continue
+		}
+		if network.Contains(parsedIP) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func GetOutBoundIPv4V2() string {
+	// 创建一个自定义的 HTTP 客户端，强制使用 IPv4
+	transport := &http.Transport{
+		Dial: func(network, addr string) (net.Conn, error) {
+			// 使用 IPv4 地址进行连接
+			return net.DialTimeout("tcp4", addr, 30*time.Second)
+		},
+	}
+
+	client := &http.Client{
+		Transport: transport,
+	}
+
+	resp, err := client.Get("https://ip.me")
+	if err != nil {
+		return ""
+	}
+	bs, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ""
+	}
+	defer resp.Body.Close()
+	re := regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)
+	ip := re.FindString(string(bs))
+	return ip
 }
 
 func GetOutBoundIPv6() string {
@@ -61,4 +121,51 @@ func HandleTcpping(destination string) (int, error) {
 	} else {
 		return 0, err
 	}
+}
+
+func MustStructToReader(v interface{}) io.Reader {
+	// 序列化为 JSON 字节流
+	data, err := json.Marshal(v)
+	if err != nil {
+		panic(err)
+		return nil
+	}
+	// 包装为 Reader
+	return bytes.NewReader(data)
+}
+
+func DownloadFile(url, dir, filename string) error {
+	// 1. 确保目录存在（自动创建）
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("创建目录失败: %v", err)
+	}
+
+	// 2. 拼接完整文件路径
+	filePath := filepath.Join(dir, filename)
+
+	// 3. 创建目标文件
+	outFile, err := os.Create(filePath)
+	if err != nil {
+		return fmt.Errorf("创建文件失败: %v", err)
+	}
+	defer outFile.Close()
+
+	// 4. 发起HTTP GET请求
+	resp, err := http.Get(url)
+	if err != nil {
+		return fmt.Errorf("请求失败: %v", err)
+	}
+	defer resp.Body.Close()
+
+	// 5. 检查HTTP状态码
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("错误状态码: %d", resp.StatusCode)
+	}
+
+	// 6. 写入文件内容
+	if _, err := io.Copy(outFile, resp.Body); err != nil {
+		return fmt.Errorf("写入文件失败: %v", err)
+	}
+
+	return nil
 }

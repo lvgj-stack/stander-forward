@@ -90,12 +90,13 @@ type ReportNetworkTrafficResp struct {
 }
 
 type GetUserPlanInfoResp struct {
-	Username       string
-	ExpirationTime time.Time
-	PlanTraffic    int32
-	UsedTraffic    int32
-	PlanName       string
-	DailyTraffics  []DailyTraffic
+	Username         string
+	ExpirationTime   time.Time
+	ResetTrafficTime time.Time
+	PlanTraffic      int32
+	UsedTraffic      int32
+	PlanName         string
+	DailyTraffics    []DailyTraffic
 }
 
 type DailyTraffic struct {
@@ -120,4 +121,8 @@ type UserTo struct {
 }
 
 type EmptyResp struct {
+}
+
+type ListNodeChainRelationShipsResp struct {
+	Chains []*entity.Chain
 }

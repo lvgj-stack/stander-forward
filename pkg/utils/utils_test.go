@@ -93,3 +93,21 @@ func TestGetOutBoundIPv6(t *testing.T) {
 		})
 	}
 }
+
+func TestGetOutBoundIPv4V2(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		{
+			name: "test 01",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := GetOutBoundIPv4V2(); got != tt.want {
+				t.Errorf("GetOutBoundIPv4V2() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

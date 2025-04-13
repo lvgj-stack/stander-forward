@@ -10,6 +10,7 @@ require (
 	github.com/heyhip/frog v0.0.0-20200806142028-0fbd1da8eb78
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.19.0
+	github.com/thoas/go-funk v0.9.3
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gen v0.3.26
 	gorm.io/gorm v1.25.12
