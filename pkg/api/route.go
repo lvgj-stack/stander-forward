@@ -27,6 +27,7 @@ func InitControllerRoute(h *server.Hertz) {
 	})
 	api.POST("rule", service.RuleSrv)
 	api.POST("chain", service.ChainSrv)
+	api.POST("chain-group", service.ChainGroupSrv)
 	api.POST("node", service.NodeSrv)
 	api.POST("data", service.DataSrv)
 	api.POST("user", service.UserSrv)

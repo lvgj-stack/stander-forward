@@ -40,6 +40,9 @@ func RuleSrv(c context.Context, ctx *app.RequestContext) {
 	case "ModifyRule":
 		rule, err := modifyRule(c, ctx)
 		error2.WriteResponse(ctx, err, rule)
+	case "ModifyRules":
+		rule, err := modifyRules(c, ctx)
+		error2.WriteResponse(ctx, err, rule)
 	case "TestRule":
 		rule, err := testRule(c, ctx)
 		error2.WriteResponse(ctx, err, rule)
@@ -358,4 +361,44 @@ func modifyRule(ctx context.Context, c *app.RequestContext) (*resp.ModifyRuleRes
 	}
 
 	return &resp.ModifyRuleResp{}, nil
+}
+
+func modifyRules(ctx context.Context, c *app.RequestContext) (*resp.EmptyResp, error) {
+	req := req2.ModifyRulesReq{}
+	if err := c.BindAndValidate(&req); err != nil {
+		return nil, err
+	}
+
+	rules, err := dal.Rule.WithContext(ctx).Where(dal.Rule.ID.In(req.RuleIDs...)).Preload(dal.Rule.Node, dal.Rule.Chain).Find()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rule := range rules {
+		node := rule.Node
+		updateRule := entity.Rule{}
+		agentModifyReq := req2.ModifyRuleReq{
+			ListenPort:    *rule.ListenPort,
+			OldListenPort: *rule.ListenPort,
+			RemoteAddr:    *rule.RemoteAddr,
+			ChainType:     *rule.Protocol,
+		}
+
+		if req.RemoteIp != "" {
+			ss := strings.Split(agentModifyReq.RemoteAddr, ":")
+			agentModifyReq.RemoteAddr = fmt.Sprintf("%s:%s", req.RemoteIp, ss[1])
+			updateRule.RemoteAddr = &agentModifyReq.RemoteAddr
+		}
+
+		_, err = client.DoRequest(utils.GenIpAndPort(node.ManagerIP, *node.Port), "rule", "ModifyRule", *node.Key, agentModifyReq)
+		if err != nil {
+			return nil, err
+		}
+		_, err = dal.Rule.WithContext(ctx).Where(dal.Rule.ID.Eq(rule.ID)).Updates(updateRule)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &resp.EmptyResp{}, nil
 }

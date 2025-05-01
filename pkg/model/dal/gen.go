@@ -18,6 +18,7 @@ import (
 var (
 	Q                    = new(Query)
 	Chain                *chain
+	ChainGroup           *chainGroup
 	Node                 *node
 	NodeChainMapping     *nodeChainMapping
 	Rule                 *rule
@@ -31,6 +32,7 @@ var (
 func SetDefault(db *gorm.DB, opts ...gen.DOOption) {
 	*Q = *Use(db, opts...)
 	Chain = &Q.Chain
+	ChainGroup = &Q.ChainGroup
 	Node = &Q.Node
 	NodeChainMapping = &Q.NodeChainMapping
 	Rule = &Q.Rule
@@ -45,6 +47,7 @@ func Use(db *gorm.DB, opts ...gen.DOOption) *Query {
 	return &Query{
 		db:                   db,
 		Chain:                newChain(db, opts...),
+		ChainGroup:           newChainGroup(db, opts...),
 		Node:                 newNode(db, opts...),
 		NodeChainMapping:     newNodeChainMapping(db, opts...),
 		Rule:                 newRule(db, opts...),
@@ -60,6 +63,7 @@ type Query struct {
 	db *gorm.DB
 
 	Chain                chain
+	ChainGroup           chainGroup
 	Node                 node
 	NodeChainMapping     nodeChainMapping
 	Rule                 rule
@@ -76,6 +80,7 @@ func (q *Query) clone(db *gorm.DB) *Query {
 	return &Query{
 		db:                   db,
 		Chain:                q.Chain.clone(db),
+		ChainGroup:           q.ChainGroup.clone(db),
 		Node:                 q.Node.clone(db),
 		NodeChainMapping:     q.NodeChainMapping.clone(db),
 		Rule:                 q.Rule.clone(db),
@@ -99,6 +104,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 	return &Query{
 		db:                   db,
 		Chain:                q.Chain.replaceDB(db),
+		ChainGroup:           q.ChainGroup.replaceDB(db),
 		Node:                 q.Node.replaceDB(db),
 		NodeChainMapping:     q.NodeChainMapping.replaceDB(db),
 		Rule:                 q.Rule.replaceDB(db),
@@ -112,6 +118,7 @@ func (q *Query) ReplaceDB(db *gorm.DB) *Query {
 
 type queryCtx struct {
 	Chain                *chainDo
+	ChainGroup           *chainGroupDo
 	Node                 *nodeDo
 	NodeChainMapping     *nodeChainMappingDo
 	Rule                 *ruleDo
@@ -125,6 +132,7 @@ type queryCtx struct {
 func (q *Query) WithContext(ctx context.Context) *queryCtx {
 	return &queryCtx{
 		Chain:                q.Chain.WithContext(ctx),
+		ChainGroup:           q.ChainGroup.WithContext(ctx),
 		Node:                 q.Node.WithContext(ctx),
 		NodeChainMapping:     q.NodeChainMapping.WithContext(ctx),
 		Rule:                 q.Rule.WithContext(ctx),

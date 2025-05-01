@@ -4,6 +4,23 @@ import (
 	"time"
 )
 
+type AddChainGroupReq struct {
+	Name   string
+	Chains []ChainEntityForChainGroup
+}
+
+type ChainEntityForChainGroup struct {
+	ID       int64 `json:"ID"`
+	Backup   bool  `json:"Backup"`
+	MaxFails int32 `json:"MaxFails" default:"2"`
+	Timeout  int32 `json:"Timeout" default:"10"`
+	Weight   int32 `json:"Weight" default:"1"`
+}
+
+type DelChainGroupReq struct {
+	ChainGroupID string `json:"ChainGroupID,required"`
+}
+
 type AddChainReq struct {
 	Port       int32  `json:"Port,required"`
 	Name       string `json:"Name,required"`
@@ -25,7 +42,7 @@ type AddRuleReq struct {
 	RuleName   string `json:"RuleName,Required"`
 
 	ChainType string `json:"ChainType" vd:"$=='TLS'||$=='TCP'||$==''"`
-	NodeId    int64  `json:"NodeId, required"`
+	NodeId    int64  `json:"NodeId,required"`
 	ChainId   int64
 }
 
@@ -85,11 +102,20 @@ type ModifyRuleReq struct {
 	ChainAddr     string `json:"ChainAddr"`
 }
 
+type ModifyRulesReq struct {
+	RuleIDs []int64 `json:"RuleIDs"`
+
+	RemoteIp string `json:"RemoteIp"`
+}
+
 type ListChainReq struct {
 	PageSize  int32  `json:"PageSize,omitempty"`
 	PageNo    int32  `json:"PageNo,omitempty"`
 	ChainName string `json:"ChainName,omitempty"`
 	Protocol  string `json:"Protocol,omitempty"`
+}
+
+type ListChainGroupReq struct {
 }
 
 type ListNodeReq struct {

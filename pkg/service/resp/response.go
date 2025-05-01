@@ -126,3 +126,26 @@ type EmptyResp struct {
 type ListNodeChainRelationShipsResp struct {
 	Chains []*entity.Chain
 }
+
+type AddChainGroupResp struct {
+}
+
+type ListChainGroupsResp struct {
+	ChainGroups []*ChainGroupVO `json:"ChainGroups"`
+}
+
+type ChainEntityForChainGroup struct {
+	ID       int64 `json:"ID"`
+	Backup   bool  `json:"Backup"`
+	MaxFails int32 `json:"MaxFails" default:"2"`
+	Timeout  int32 `json:"Timeout" default:"10"`
+	Weight   int32 `json:"Weight" default:"1"`
+
+	ChainName string `json:"ChainName"`
+}
+
+type ChainGroupVO struct {
+	ChainGroupID   string
+	ChainGroupName string
+	Chains         []*ChainEntityForChainGroup
+}

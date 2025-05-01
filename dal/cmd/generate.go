@@ -79,6 +79,10 @@ func main() {
 		&field.RelateConfig{
 			GORMTag: field.GormTag{"references": []string{"NodeID"}, "foreignKey": []string{"ID"}},
 		}))
+	chainGroups := g.GenerateModel("chain_groups", gen.FieldRelate(field.HasOne, "Chain", chain,
+		&field.RelateConfig{
+			GORMTag: field.GormTag{"references": []string{"ChainID"}, "foreignKey": []string{"ID"}},
+		}), gen.FieldType("backup", "bool"), gen.FieldGenType("backup", "Bool"))
 	g.ApplyBasic(
 		chain,
 		node,
@@ -89,6 +93,7 @@ func main() {
 		trafficPlan,
 		user,
 		ncm,
+		chainGroups,
 	)
 
 	g.Execute()
