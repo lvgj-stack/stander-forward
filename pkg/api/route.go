@@ -31,6 +31,7 @@ func InitControllerRoute(h *server.Hertz) {
 	api.POST("node", service.NodeSrv)
 	api.POST("data", service.DataSrv)
 	api.POST("user", service.UserSrv)
+	api.POST("plan", service.PlanSrv)
 }
 
 func InitAgentRoute(h *server.Hertz) {

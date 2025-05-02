@@ -115,6 +115,18 @@ type ListUsersResp struct {
 	TotalCount int64
 	Users      []*UserTo
 }
+
+type ListPlansResp struct {
+	PageSize   int
+	PageNumber int
+	TotalCount int64
+	Plans      []*PlanTo
+}
+
+type PlanTo struct {
+	*entity.TrafficPlan
+}
+
 type UserTo struct {
 	*entity.User
 	UsedTraffic int64

@@ -187,3 +187,11 @@ type ObserverNetworkTrafficReq struct {
 		} `json:"stats"`
 	} `json:"events"`
 }
+
+type ListPlansReq struct {
+}
+
+type AssociatePlanReq struct {
+	UserId int32 `json:"userId"`
+	PlanId int64 `json:"planId"`
+}
