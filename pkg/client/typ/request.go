@@ -15,7 +15,7 @@ type RequestForServiceRequest struct {
 	Listener   ListenerForServiceRequest    `json:"listener"`
 	Logger     string                       `json:"logger"`
 	Loggers    []string                     `json:"loggers"`
-	Metadata   map[string]string            `json:"metadata"`
+	Metadata   map[string]any               `json:"metadata"`
 	Name       string                       `json:"name"`
 	Observer   string                       `json:"observer"`
 	Recorders  []RecordersForServiceRequest `json:"recorders"`

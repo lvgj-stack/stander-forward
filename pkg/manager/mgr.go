@@ -186,9 +186,17 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 				Addr: src,
 				Handler: cli_typ.HandlerForServiceRequest{
 					Type: "tcp",
+					Metadata: &cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Listener: cli_typ.ListenerForServiceRequest{
 					Type: "tcp",
+					Metadata: cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Forwarder: &cli_typ.ForwarderForServiceRequest{
 					Nodes: []cli_typ.NodesForServiceRequest{
@@ -197,6 +205,10 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 							Addr: raddr,
 						},
 					},
+				},
+				Metadata: map[string]any{
+					"ttl":       "10s",
+					"keepalive": true,
 				},
 			}); err != nil {
 				return err
@@ -208,9 +220,17 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 				Addr: src,
 				Handler: cli_typ.HandlerForServiceRequest{
 					Type: "udp",
+					Metadata: &cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Listener: cli_typ.ListenerForServiceRequest{
 					Type: "udp",
+					Metadata: cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Forwarder: &cli_typ.ForwarderForServiceRequest{
 					Nodes: []cli_typ.NodesForServiceRequest{
@@ -219,6 +239,10 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 							Addr: raddr,
 						},
 					},
+				},
+				Metadata: map[string]any{
+					"ttl":       "10s",
+					"keepalive": true,
 				},
 			}); err != nil {
 				return err
@@ -288,9 +312,17 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 				Handler: cli_typ.HandlerForServiceRequest{
 					Chain: "chain-" + chain,
 					Type:  "tcp",
+					Metadata: &cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Listener: cli_typ.ListenerForServiceRequest{
 					Type: "tcp",
+					Metadata: cli_typ.MetadataForServiceRequest{
+						"ttl":       "10s",
+						"keepalive": true,
+					},
 				},
 				Forwarder: &cli_typ.ForwarderForServiceRequest{
 					Nodes: []cli_typ.NodesForServiceRequest{
@@ -299,6 +331,10 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 							Name: "target-" + raddr,
 						},
 					},
+				},
+				Metadata: map[string]any{
+					"ttl":       "10s",
+					"keepalive": true,
 				},
 			}); err != nil {
 				return err
@@ -316,7 +352,7 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 					Type: "udp",
 					Metadata: map[string]any{
 						"keepalive":      true,
-						"ttl":            "5s",
+						"ttl":            "10s",
 						"readBufferSize": 4096,
 					},
 				},

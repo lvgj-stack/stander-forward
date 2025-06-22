@@ -92,7 +92,7 @@ func (i *gostCli) AddObservers(_ context.Context, req *typ.RequestForObserverReq
 
 func (i *gostCli) AddService(ctx context.Context, req *typ.RequestForServiceRequest) error {
 	req.Observer = "obs-0"
-	req.Metadata = map[string]string{
+	req.Metadata = map[string]any{
 		"enableStats":           "true",
 		"observer.period":       "60s",
 		"observer.resetTraffic": "true",
