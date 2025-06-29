@@ -4,7 +4,7 @@
 CONTROLLER_ADDR=$1
 NODE_KEY=$2
 EXTRA_ARGS=$3
-GITHUB_REPO="https://github.com/lvgj-stack/naive-admin-go/releases/download/v1.0.0/stander"
+GITHUB_REPO="https://github.com/lvgj-stack/stander-forward/releases/download/v1.0.3/stander"
 INSTALL_DIR="/usr/local/bin"
 SERVICE_NAME="stander-agent"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
