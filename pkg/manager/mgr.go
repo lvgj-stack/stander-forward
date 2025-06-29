@@ -230,6 +230,7 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 					Metadata: cli_typ.MetadataForServiceRequest{
 						"ttl":       "10s",
 						"keepalive": true,
+						"relay":     "udp",
 					},
 				},
 				Forwarder: &cli_typ.ForwarderForServiceRequest{
@@ -243,6 +244,7 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 				Metadata: map[string]any{
 					"ttl":       "10s",
 					"keepalive": true,
+					"relay":     "udp",
 				},
 			}); err != nil {
 				return err
@@ -354,6 +356,7 @@ func AddRule(src, chain, raddr string, typ common.ConnectorType) error {
 						"keepalive":      true,
 						"ttl":            "10s",
 						"readBufferSize": 4096,
+						"relay":          "udp",
 					},
 				},
 				Forwarder: &cli_typ.ForwarderForServiceRequest{

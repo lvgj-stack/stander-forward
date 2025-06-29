@@ -97,6 +97,7 @@ func (i *gostCli) AddService(ctx context.Context, req *typ.RequestForServiceRequ
 		"observer.period":       "60s",
 		"observer.resetTraffic": "true",
 	}
+	hlog.Infof("[AddService] req: %v", req)
 	reqs, err := http.NewRequest(http.MethodPost, i.host+GostURL_Service, utils.MustStructToReader(req))
 	do, err := http.DefaultClient.Do(reqs)
 	if err != nil {
@@ -119,6 +120,7 @@ func (i *gostCli) AddService(ctx context.Context, req *typ.RequestForServiceRequ
 
 func (i *gostCli) DeleteService(ctx context.Context, serviceName string) error {
 	request, err := http.NewRequest(http.MethodDelete, i.host+GostURL_Service+"/"+serviceName, nil)
+	hlog.Infof("[DeleteService] req: %v", serviceName)
 	do, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return err
@@ -140,6 +142,7 @@ func (i *gostCli) DeleteService(ctx context.Context, serviceName string) error {
 
 func (i *gostCli) UpdateService(ctx context.Context, req *typ.RequestForServiceRequest) error {
 	request, err := http.NewRequest(http.MethodPut, i.host+GostURL_Service+"/"+req.Name, nil)
+	hlog.Infof("[UpdateService] req: %v", req)
 	do, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return err
@@ -161,6 +164,7 @@ func (i *gostCli) UpdateService(ctx context.Context, req *typ.RequestForServiceR
 
 func (i *gostCli) AddChain(ctx context.Context, req *typ.RequestForChainRequest) error {
 	request, err := http.NewRequest(http.MethodPost, i.host+GostURL_Chain, utils.MustStructToReader(req))
+	hlog.Infof("[AddChain] req: %v", req)
 	do, err := http.DefaultClient.Do(request)
 	if err != nil {
 		return err
